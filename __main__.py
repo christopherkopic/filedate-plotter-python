@@ -2,6 +2,7 @@ import sys
 import os
 import warnings
 from datetime import datetime, time
+from functools import partial
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
@@ -96,38 +97,52 @@ class GraphWindow(QtWidgets.QWidget):
         frames_subgrid = QtWidgets.QGridLayout()
         frames_groupbox.setLayout(frames_subgrid)
 
-        spi_numFrames = QtWidgets.QSpinBox(self, minimum=1,
-                maximum=1000000,
-                value=200)
-        spi_numFrames.resize(spi_numFrames.sizeHint())
-        spi_numFrames.valueChanged.connect(self.update_poly_total)
-        frames_subgrid.addWidget(spi_numFrames,0,0,1,1)
+        spinbox_defaults = {"Total Number of Frames":200,"First Frame":1,"Last Frame":200}
+        self.frame_spinboxes = []
+        i=0
+        for labelname, default in spinbox_defaults.items():
+            spinBox = QtWidgets.QSpinBox(self, minimum=1, maximum=1000000, value=default)
+            spinBox.resize(spinBox.sizeHint())
+            spinBox.valueChanged.connect(partial(self.update_frame_spinboxes, labelname))
+            self.frame_spinboxes.append(spinBox)
+            frames_subgrid.addWidget(spinBox,i,0,1,1)
+            label = QtWidgets.QLabel(labelname, self)
+            label.resize(label.sizeHint())
+            frames_subgrid.addWidget(label,i,1,1,1)
+            i += 1
 
-        self.spi_in = QtWidgets.QSpinBox(self, minimum=0,
-                maximum=1000000,
-                value=0)
-        self.spi_in.resize(self.spi_in.sizeHint())
-        self.spi_in.valueChanged.connect(self.update_poly_in)
-        frames_subgrid.addWidget(self.spi_in, 1,0,1,1)
-
-        self.spi_out = QtWidgets.QSpinBox(self, minimum=0,
-                maximum=1000000,
-                value=200)
-        self.spi_out.resize(self.spi_out.sizeHint())
-        self.spi_out.valueChanged.connect(self.update_poly_out)
-        frames_subgrid.addWidget(self.spi_out, 2,0,1,1)
-
-        lab_numFrames = QtWidgets.QLabel("Total Number of Frames", self)
-        lab_numFrames.resize(lab_numFrames.sizeHint())
-        frames_subgrid.addWidget(lab_numFrames, 0,1,1,2)
-
-        lab_in = QtWidgets.QLabel("First Frame", self)
-        lab_in.resize(lab_in.sizeHint())
-        frames_subgrid.addWidget(lab_in, 1,1,1,2)
-
-        lab_out = QtWidgets.QLabel("Last Frame", self)
-        lab_out.resize(lab_out.sizeHint())
-        frames_subgrid.addWidget(lab_out, 2,1,1,2)
+        # spi_numFrames = QtWidgets.QSpinBox(self, minimum=1,
+        #         maximum=1000000,
+        #         value=200)
+        # spi_numFrames.resize(spi_numFrames.sizeHint())
+        # spi_numFrames.valueChanged.connect(self.update_poly_total)
+        # frames_subgrid.addWidget(spi_numFrames,0,0,1,1)
+        #
+        # self.spi_in = QtWidgets.QSpinBox(self, minimum=0,
+        #         maximum=1000000,
+        #         value=0)
+        # self.spi_in.resize(self.spi_in.sizeHint())
+        # self.spi_in.valueChanged.connect(self.update_poly_in)
+        # frames_subgrid.addWidget(self.spi_in, 1,0,1,1)
+        #
+        # self.spi_out = QtWidgets.QSpinBox(self, minimum=0,
+        #         maximum=1000000,
+        #         value=200)
+        # self.spi_out.resize(self.spi_out.sizeHint())
+        # self.spi_out.valueChanged.connect(self.update_poly_out)
+        # frames_subgrid.addWidget(self.spi_out, 2,0,1,1)
+        #
+        # lab_numFrames = QtWidgets.QLabel("Total Number of Frames", self)
+        # lab_numFrames.resize(lab_numFrames.sizeHint())
+        # frames_subgrid.addWidget(lab_numFrames, 0,1,1,2)
+        #
+        # lab_in = QtWidgets.QLabel("First Frame", self)
+        # lab_in.resize(lab_in.sizeHint())
+        # frames_subgrid.addWidget(lab_in, 1,1,1,2)
+        #
+        # lab_out = QtWidgets.QLabel("Last Frame", self)
+        # lab_out.resize(lab_out.sizeHint())
+        # frames_subgrid.addWidget(lab_out, 2,1,1,2)
 
         #grid.addLayout(frames_subgrid,4,0,1,1)
         grid.addWidget(frames_groupbox,4,0,1,1)
@@ -300,6 +315,11 @@ class GraphWindow(QtWidgets.QWidget):
             else:
                 self.polyfit_dates.pop(deg, None)
             self.update_plot()
+
+    def update_frame_spinboxes(self, labelname):
+        spbx = self.sender()
+        print(labelname)
+        print(spbx.value())
 
     def update_poly_in(self, val):
         """Update polyfits for new in point"""
